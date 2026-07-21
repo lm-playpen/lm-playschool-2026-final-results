@@ -1,0 +1,738 @@
+{
+  "meta": {
+    "game_name": "clockwork_courier",
+    "experiment_name": "standard",
+    "game_id": 7,
+    "results_folder": "Bentel rockers__qwen3.5-4b__Bentel_iter_2",
+    "clem_version": "3.7.2",
+    "round_count": 5,
+    "completed": true
+  },
+  "player_models": {
+    "0": {
+      "model_spec": {
+        "model_name": "Bentel rockers__qwen3.5-4b__Bentel_iter_2",
+        "_team": "Bentel rockers",
+        "_version": "Bentel_iter_2",
+        "backend": "huggingface_local",
+        "context_size": "32k",
+        "huggingface_id": "harshavaishnav/LMPlayschool_Submission",
+        "languages": [
+          "en"
+        ],
+        "license": {
+          "name": "Apache-2.0",
+          "url": "https://github.com/QwenLM/Qwen3/blob/main/LICENSE"
+        },
+        "lookup_source": "/project/mmanina/lm-playschool-test-set/playpen/model_registry.json",
+        "model_config": {
+          "premade_chat_template": true,
+          "eos_to_cull": "<\\|im_end\\|>|<\\|endoftext\\|>",
+          "chat_template_kwargs": {
+            "enable_thinking": false
+          },
+          "multimodality": {
+            "single_image": true,
+            "multiple_images": true,
+            "audio": false,
+            "video": true
+          }
+        },
+        "open_weight": true,
+        "parameters": "4B",
+        "release_date": "2026-07-06"
+      },
+      "gen_args": {
+        "temperature": 0.0,
+        "max_tokens": 5000
+      }
+    }
+  },
+  "players": {
+    "GM": {
+      "game_role": "Game Master",
+      "model_name": "programmatic"
+    },
+    "Player 1": {
+      "game_role": "Courier",
+      "model_name": "Bentel rockers__qwen3.5-4b__Bentel_iter_2"
+    }
+  },
+  "turns": [
+    [
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2026-07-10T09:07:27.244806",
+        "action": {
+          "type": "send message",
+          "content": "You are a courier in a clockwork city. Everything in this city runs on a fixed, fully\npredictable schedule - nothing is random and nothing is hidden. Your job is to pick up\nand deliver parcels before the clock runs out.\n\nTHE MAP (coordinates are (column,row); (1,1) is the top-left cell)\n\n   123456789\n  +---------+\n 1|......B..|\n 2|..#..###.|\n 3|.........|\n 4|#q.......|\n 5|..#......|\n 6|#xp.Sy#..|\n 7|.#.#..#..|\n 8|......#..|\n 9|...12.A..|\n  +---------+\n\nLEGEND\nS = your start cell (you are here at t=0)\n# = wall (the border is also impassable)\n. = open floor\nA, B = gate cell(s); passable only while open (schedules below)\n1 = pickup cell of parcel 1; x = its delivery cell\n2 = pickup cell of parcel 2; y = its delivery cell\np, q = guard(s) drawn at their t=0 cell - THE GUARDS MOVE every tick along the routes listed below\n\nHOW TIME AND MOVEMENT WORK\n- Time advances in ticks t=0,1,2,... You start on cell (5,6) at t=0.\n- Each tick you make exactly one move: N (up), S (down), E (right), W (left), or WAIT.\n- One step t -> t+1 resolves in this exact order:\n  1. Your move resolves. Moving into a wall, the map border, or a gate that is closed\n     at the arrival time t+1 is a BUMP: you stay where you are and the tick is wasted.\n     WAIT never bumps.\n  2. Every guard moves to its position for time t+1.\n  3. If you are now on the same cell as a guard, you are CAUGHT. Passing a guard\n     mid-move is safe; only ending the tick on its cell gets you caught.\n  4. Otherwise, if you are on a parcel's pickup cell you automatically pick it up; if\n     you are on the delivery cell of a parcel you carry, you automatically deliver it.\n- If you are CAUGHT: you keep your parcels, but you are put back on your start cell\n  (5,6), the rest of your current plan is cancelled, and the cancelled moves' ticks\n  are forfeited. Standing on a gate cell when it closes is safe - gates never trap you.\n\nTHE SCHEDULES (fixed forever; you can compute every future position exactly)\nGate A at (7,9): open exactly when (t mod 4) is in {0, 1}. So it is open at t=0,1,4,5,... and closed at t=2,3,6,7,... You can only step ONTO it at a tick t+1 where it is open.\nGate B at (7,1): open exactly when (t mod 4) is in {1, 2}. So it is open at t=1,2,5,6,... and closed at t=0,3,4,7,... You can only step ONTO it at a tick t+1 where it is open.\nGuard P: walks a fixed cycle of length 4. Its position at tick t is determined by (t mod 4) as follows: t mod 4=0: (3,6); t mod 4=1: (2,6); t mod 4=2: (2,5); t mod 4=3: (2,6). This repeats forever.\nGuard Q: walks a fixed cycle of length 8. Its position at tick t is determined by (t mod 8) as follows: t mod 8=0: (2,4); t mod 8=1: (3,4); t mod 8=2: (3,3); t mod 8=3: (2,3); t mod 8=4: (2,2); t mod 8=5: (2,3); t mod 8=6: (3,3); t mod 8=7: (3,4). This repeats forever.\n\nYOUR JOB\nParcel 1: pick it up at (4,9) (map glyph '1'), deliver it to (2,6) (map glyph 'x'). Pickup and delivery happen automatically when you end a tick on the cell.\nParcel 2: pick it up at (5,9) (map glyph '2'), deliver it to (6,6) (map glyph 'y'). Pickup and delivery happen automatically when you end a tick on the cell.\nDeliver every parcel within 25 ticks. You move by committing to plans of\nexactly 5 moves at a time; you have at most 5 plans in total.\nIf you deliver the last parcel mid-plan, the game ends immediately and the unused\nmoves are discarded.\n\nWORKED EXAMPLE (for the rules only - this is NOT the map above): suppose you stand at\n(2,2), gate G at (3,2) has period 2 and is open when (t mod 2) = 1, and it is now t=0.\nMoving E now (arriving at t=1, when the gate is open) succeeds. But moving E at t=1\n(arriving at t=2, when the gate is closed) is a BUMP: you stay at (2,2) and tick 2 is\nwasted. The right play at t=1 is to WAIT once and then move E, arriving at t=3 when\nthe gate is open again.\n\nAfter each plan you receive a per-tick log of what happened, including your resulting position.\n\nRESPOND IN EXACTLY THIS FORMAT (and put nothing after the PLAN line):\nTHOUGHTS: <your reasoning - any length; the referee ignores this>\nPOSITION: (x,y)\nPLAN: <exactly 5 moves from {N, S, E, W, WAIT}, separated by spaces>\n\nThe POSITION line must state the cell you predict you will occupy AFTER your plan has\nexecuted. The referee records your prediction but will never confirm or correct it.\n\nGive your first response now.\n",
+          "label": "context"
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2026-07-10T09:07:27.244819",
+        "action": {
+          "type": "get message",
+          "content": "THOUGHTS: I'll start by moving towards the first pickup cell (4,9) to collect parcel 1. I'll take a direct route to minimize time spent.\n\nPOSITION: (5,6)\nPLAN: E E E E E",
+          "label": "response"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-10T09:07:27.244891",
+        "action": {
+          "type": "round_result",
+          "content": {
+            "round": 0,
+            "start_tick": 0,
+            "end_tick": 5,
+            "plan": [
+              "E",
+              "E",
+              "E",
+              "E",
+              "E"
+            ],
+            "events": [
+              {
+                "t": 1,
+                "move": "E",
+                "result": "OK",
+                "pos": [
+                  6,
+                  6
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 2,
+                "move": "E",
+                "result": "BUMP_WALL",
+                "pos": [
+                  6,
+                  6
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 3,
+                "move": "E",
+                "result": "BUMP_WALL",
+                "pos": [
+                  6,
+                  6
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 4,
+                "move": "E",
+                "result": "BUMP_WALL",
+                "pos": [
+                  6,
+                  6
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 5,
+                "move": "E",
+                "result": "BUMP_WALL",
+                "pos": [
+                  6,
+                  6
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              }
+            ],
+            "predicted_pos": [
+              5,
+              6
+            ],
+            "predicted_heading": null,
+            "actual_pos": [
+              6,
+              6
+            ],
+            "actual_heading": "N",
+            "prediction_correct": 0,
+            "bumps": 4,
+            "caught": 0,
+            "forfeited_ticks": 0,
+            "deliveries_this_round": 0,
+            "delivered_total": 0,
+            "carrying": []
+          }
+        }
+      }
+    ],
+    [
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2026-07-10T09:07:57.296254",
+        "action": {
+          "type": "send message",
+          "content": "ROUND 1 RESULT (ticks 0 -> 5):\nt=1: E -> OK, now at (6,6).\nt=2: E -> BUMP (you ran into a wall), still at (6,6).\nt=3: E -> BUMP (you ran into a wall), still at (6,6).\nt=4: E -> BUMP (you ran into a wall), still at (6,6).\nt=5: E -> BUMP (you ran into a wall), still at (6,6).\nSTATUS: tick 5 of 25. You are at (6,6). Carrying: nothing. Delivered: nothing. Rounds left: 4.\nRespond now in the required format: a POSITION line predicting your cell after your next plan, then a PLAN line with exactly 5 moves.",
+          "label": "context"
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2026-07-10T09:07:57.296269",
+        "action": {
+          "type": "get message",
+          "content": "THOUGHTS: I need to change my approach. Since I'm stuck at (6,6) due to walls, I'll wait for the gate to open and then try to find a path through the open cells.\n\nPOSITION: (6,6)\nPLAN: W W W W W",
+          "label": "response"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-10T09:07:57.296333",
+        "action": {
+          "type": "round_result",
+          "content": {
+            "round": 1,
+            "start_tick": 5,
+            "end_tick": 10,
+            "plan": [
+              "W",
+              "W",
+              "W",
+              "W",
+              "W"
+            ],
+            "events": [
+              {
+                "t": 6,
+                "move": "W",
+                "result": "OK",
+                "pos": [
+                  5,
+                  6
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 7,
+                "move": "W",
+                "result": "OK",
+                "pos": [
+                  4,
+                  6
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 8,
+                "move": "W",
+                "result": "CAUGHT",
+                "pos": [
+                  3,
+                  6
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": "P",
+                "gate": null
+              }
+            ],
+            "predicted_pos": [
+              6,
+              6
+            ],
+            "predicted_heading": null,
+            "actual_pos": [
+              5,
+              6
+            ],
+            "actual_heading": "N",
+            "prediction_correct": 0,
+            "bumps": 0,
+            "caught": 1,
+            "forfeited_ticks": 2,
+            "deliveries_this_round": 0,
+            "delivered_total": 0,
+            "carrying": []
+          }
+        }
+      }
+    ],
+    [
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2026-07-10T09:08:27.351366",
+        "action": {
+          "type": "send message",
+          "content": "ROUND 2 RESULT (ticks 5 -> 10):\nt=6: W -> OK, now at (5,6).\nt=7: W -> OK, now at (4,6).\nt=8: W -> CAUGHT by guard P at (3,6)! Returned to start (5,6).\nCapture penalty: the remaining 2 move(s) of your plan were cancelled and the round's leftover ticks were forfeited; the clock jumped to t=10.\nSTATUS: tick 10 of 25. You are at (5,6). Carrying: nothing. Delivered: nothing. Rounds left: 3.\nRespond now in the required format: a POSITION line predicting your cell after your next plan, then a PLAN line with exactly 5 moves.",
+          "label": "context"
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2026-07-10T09:08:27.351382",
+        "action": {
+          "type": "get message",
+          "content": "THOUGHTS: I need to avoid the guard and find a path to the pickup cell. I'll try to go through the open cells on the left side of the map.\n\nPOSITION: (5,6)\nPLAN: W N N N N",
+          "label": "response"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-10T09:08:27.351453",
+        "action": {
+          "type": "round_result",
+          "content": {
+            "round": 2,
+            "start_tick": 10,
+            "end_tick": 15,
+            "plan": [
+              "W",
+              "N",
+              "N",
+              "N",
+              "N"
+            ],
+            "events": [
+              {
+                "t": 11,
+                "move": "W",
+                "result": "OK",
+                "pos": [
+                  4,
+                  6
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 12,
+                "move": "N",
+                "result": "OK",
+                "pos": [
+                  4,
+                  5
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 13,
+                "move": "N",
+                "result": "OK",
+                "pos": [
+                  4,
+                  4
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 14,
+                "move": "N",
+                "result": "OK",
+                "pos": [
+                  4,
+                  3
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 15,
+                "move": "N",
+                "result": "OK",
+                "pos": [
+                  4,
+                  2
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              }
+            ],
+            "predicted_pos": [
+              5,
+              6
+            ],
+            "predicted_heading": null,
+            "actual_pos": [
+              4,
+              2
+            ],
+            "actual_heading": "N",
+            "prediction_correct": 0,
+            "bumps": 0,
+            "caught": 0,
+            "forfeited_ticks": 0,
+            "deliveries_this_round": 0,
+            "delivered_total": 0,
+            "carrying": []
+          }
+        }
+      }
+    ],
+    [
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2026-07-10T09:08:50.304633",
+        "action": {
+          "type": "send message",
+          "content": "ROUND 3 RESULT (ticks 10 -> 15):\nt=11: W -> OK, now at (4,6).\nt=12: N -> OK, now at (4,5).\nt=13: N -> OK, now at (4,4).\nt=14: N -> OK, now at (4,3).\nt=15: N -> OK, now at (4,2).\nSTATUS: tick 15 of 25. You are at (4,2). Carrying: nothing. Delivered: nothing. Rounds left: 2.\nRespond now in the required format: a POSITION line predicting your cell after your next plan, then a PLAN line with exactly 5 moves.",
+          "label": "context"
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2026-07-10T09:08:50.304649",
+        "action": {
+          "type": "get message",
+          "content": "THOUGHTS: I'm getting closer to the pickup cell (4,9). I'll continue moving north to reach it.\n\nPOSITION: (4,2)\nPLAN: N N N N N",
+          "label": "response"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-10T09:08:50.304722",
+        "action": {
+          "type": "round_result",
+          "content": {
+            "round": 3,
+            "start_tick": 15,
+            "end_tick": 20,
+            "plan": [
+              "N",
+              "N",
+              "N",
+              "N",
+              "N"
+            ],
+            "events": [
+              {
+                "t": 16,
+                "move": "N",
+                "result": "OK",
+                "pos": [
+                  4,
+                  1
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 17,
+                "move": "N",
+                "result": "BUMP_BORDER",
+                "pos": [
+                  4,
+                  1
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 18,
+                "move": "N",
+                "result": "BUMP_BORDER",
+                "pos": [
+                  4,
+                  1
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 19,
+                "move": "N",
+                "result": "BUMP_BORDER",
+                "pos": [
+                  4,
+                  1
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 20,
+                "move": "N",
+                "result": "BUMP_BORDER",
+                "pos": [
+                  4,
+                  1
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              }
+            ],
+            "predicted_pos": [
+              4,
+              2
+            ],
+            "predicted_heading": null,
+            "actual_pos": [
+              4,
+              1
+            ],
+            "actual_heading": "N",
+            "prediction_correct": 0,
+            "bumps": 4,
+            "caught": 0,
+            "forfeited_ticks": 0,
+            "deliveries_this_round": 0,
+            "delivered_total": 0,
+            "carrying": []
+          }
+        }
+      }
+    ],
+    [
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2026-07-10T09:09:14.277522",
+        "action": {
+          "type": "send message",
+          "content": "ROUND 4 RESULT (ticks 15 -> 20):\nt=16: N -> OK, now at (4,1).\nt=17: N -> BUMP (you ran into the border), still at (4,1).\nt=18: N -> BUMP (you ran into the border), still at (4,1).\nt=19: N -> BUMP (you ran into the border), still at (4,1).\nt=20: N -> BUMP (you ran into the border), still at (4,1).\nSTATUS: tick 20 of 25. You are at (4,1). Carrying: nothing. Delivered: nothing. Rounds left: 1.\nRespond now in the required format: a POSITION line predicting your cell after your next plan, then a PLAN line with exactly 5 moves.",
+          "label": "context"
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2026-07-10T09:09:14.277537",
+        "action": {
+          "type": "get message",
+          "content": "THOUGHTS: I need to find a way to reach the pickup cell (4,9). I'll try to go through the open cells on the right side of the map.\n\nPOSITION: (4,1)\nPLAN: E E E E E",
+          "label": "response"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-10T09:09:14.277614",
+        "action": {
+          "type": "round_result",
+          "content": {
+            "round": 4,
+            "start_tick": 20,
+            "end_tick": 25,
+            "plan": [
+              "E",
+              "E",
+              "E",
+              "E",
+              "E"
+            ],
+            "events": [
+              {
+                "t": 21,
+                "move": "E",
+                "result": "OK",
+                "pos": [
+                  5,
+                  1
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 22,
+                "move": "E",
+                "result": "OK",
+                "pos": [
+                  6,
+                  1
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 23,
+                "move": "E",
+                "result": "BUMP_GATE",
+                "pos": [
+                  6,
+                  1
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": "B"
+              },
+              {
+                "t": 24,
+                "move": "E",
+                "result": "BUMP_GATE",
+                "pos": [
+                  6,
+                  1
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": "B"
+              },
+              {
+                "t": 25,
+                "move": "E",
+                "result": "OK",
+                "pos": [
+                  7,
+                  1
+                ],
+                "heading": "N",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              }
+            ],
+            "predicted_pos": [
+              4,
+              1
+            ],
+            "predicted_heading": null,
+            "actual_pos": [
+              7,
+              1
+            ],
+            "actual_heading": "N",
+            "prediction_correct": 0,
+            "bumps": 2,
+            "caught": 0,
+            "forfeited_ticks": 0,
+            "deliveries_this_round": 0,
+            "delivered_total": 0,
+            "carrying": []
+          }
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-10T09:09:14.277704",
+        "action": {
+          "type": "tick budget exhausted",
+          "content": 25
+        }
+      }
+    ]
+  ],
+  "Aborted": 0,
+  "Lose": 1,
+  "Success": 0,
+  "episode_result": {
+    "outcome": "failure",
+    "delivered": 0,
+    "num_parcels": 2,
+    "used_ticks": 25,
+    "tick_budget": 25,
+    "optimal_ticks": 14,
+    "rounds_played": 5,
+    "bumps": 10,
+    "captures": 1,
+    "forfeited_ticks": 2,
+    "predictions_correct": 0,
+    "predictions_total": 5,
+    "reprompts": 0
+  },
+  "Request Count": [
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "Violated Request Count": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "Parsed Request Count": [
+    1,
+    1,
+    1,
+    1,
+    1
+  ]
+}
