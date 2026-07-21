@@ -64,24 +64,25 @@ For the full set of games and scripts used for evaluation, see [lm-playschool-20
 ## Results table
 
 
-| Model | playpen clemscore | playpen statscore | ID | OOD |
-|---|--:|--:|--:|--:|
-| **qwen3.5-2b** | **11.43** | **27.26** | **13.41** | **3.72** |
-| &nbsp;&nbsp;CityUoL__qwen3.5-2b__Qwen-GuidePlay-2B-v1 | 50.44 ▲ | 36.74 ▲ | 46.26 ▲ | 10.25 ▲ |
-| &nbsp;&nbsp;DAIR__qwen3.5-2b__sft-dpo-v2 | 49.03 ▲ | 26.87 ▼ | 50.75 ▲ | 14.56 ▲ |
-| &nbsp;&nbsp;DAIR__qwen3.5-2b__sft-v1 | 46.34 ▲ | 22.86 ▼ | 46.57 ▲ | 15.62 ▲ |
-| &nbsp;&nbsp;playornotplay__qwen3.5-2b__…-828e356 | 39.90 ▲ | 18.94 ▼ | 41.17 ▲ | 7.88 ▲ |
-| **qwen3.5-4b** | **33.71** | **37.16** | **34.02** | **17.99** |
-| &nbsp;&nbsp;Bentel rockers__qwen3.5-4b__Bentel_iter | 36.09 ▲ | 35.75 ▼ | 37.41 ▲ | 16.60 ▼ |
-| &nbsp;&nbsp;Bentel rockers__qwen3.5-4b__Bentel_iter_2 | 29.67 ▼ | 60.74 ▲ | 31.97 ▼ | 10.19 ▼ |
-| &nbsp;&nbsp;Bentel rockers__qwen3.5-4b__Bentel_iter_3 | 36.09 ▲ | 35.75 ▼ | 37.76 ▲ | 16.60 ▼ |
-| **llama-3.1-8b-instruct** | **22.19** | **49.26** | **31.24** | **22.62** |
-| **qwen3.5-9b** | **33.28** | **54.53** | **41.12** | **24.91** |
-| &nbsp;&nbsp;BSU-SLIM__Qwen3.5-9B-Base__playpen-prm-9b-best_of_n | 40.76 ▲ | 44.72 ▼ | 39.64 ▼ | 15.18 ▼ |
-| &nbsp;&nbsp;Dialogue Architects__qwen3.5-9b__SCoRe_Qwen3.5-9B | 37.60 ▲ | 52.61 ▼ | 43.12 ▲ | 23.37 ▼ |
-| &nbsp;&nbsp;LLP: Large Language Problems__qwen3.5-9b__llp-final | 54.61 ▲ | 48.63 ▼ | 59.23 ▲ | 22.09 ▼ |
-| **qwen3.5-27b** | **62.34** | **70.18** | **64.34** | **43.51** |
-| &nbsp;&nbsp;SLED-BSU__Qwen3.5-27B-sft-ep1__prm-ep1-best_of_n | 48.30 ▼ | 70.93 ▲ | 56.36 ▼ | 30.02 ▼ |
+| Base Model | Team | Submission | playpen clemscore | playpen statscore | ID | OOD |
+|---|---|---|--:|--:|--:|--:|
+| **qwen3.5-2b** | | | **11.43** | **27.26** | **13.41** | **3.72** |
+| | CityUoL | Qwen-GuidePlay-2B-v1 | 50.44 ▲ | 36.74 ▲ | 46.26 ▲ | 10.25 ▲ |
+| | DAIR | sft-dpo-v2 | 49.03 ▲ | 26.87 ▼ | 50.75 ▲ | 14.56 ▲ |
+| | DAIR | sft-v1 | 46.34 ▲ | 22.86 ▼ | 46.57 ▲ | 15.62 ▲ |
+| | playornotplay | playornotplay-v1.0-merged-fp32-7263076 | 39.90 ▲ | 18.94 ▼ | 41.17 ▲ | 7.88 ▲ |
+| **qwen3.5-4b** | | | **33.71** | **37.16** | **34.02** | **17.99** |
+| | Bentel rockers | Bentel_iter | 36.09 ▲ | 35.75 ▼ | 37.41 ▲ | 16.60 ▼ |
+| | Bentel rockers | Bentel_iter_2 | 29.67 ▼ | 60.74 ▲ | 31.97 ▼ | 10.19 ▼ |
+| | Bentel rockers | Bentel_iter_3 | 36.09 ▲ | 35.75 ▼ | 37.76 ▲ | 16.60 ▼ |
+| **llama-3.1-8b-instruct** | | | **22.19** | **49.26** | **31.24** | **22.62** |
+| **qwen3.5-9b** | | | **33.28** | **54.53** | **41.12** | **24.91** |
+| | BSU-SLIM | qwen35-9b-prm-search-final | 40.76 ▲ | 44.72 ▼ | 39.64 ▼ | 15.18 ▼ |
+| | Dialogue Architects | SCoRe_Qwen3.5-9B | 37.60 ▲ | 52.61 ▼ | 43.12 ▲ | 23.37 ▼ |
+| | LLP: Large Language Problems | llp-final | 54.61 ▲ | 48.63 ▼ | 59.23 ▲ | 22.09 ▼ |
+| **qwen3.5-27b** | | | **62.34** | **70.18** | **64.34** | **43.51** |
+| | SLED-BSU | Success Filtered Supervised Finetuned Model PRM Guided (Beam search, best-of-N) | 48.30 ▼ | 70.93 ▲ | 56.36 ▼ | 30.02 ▼ |
+
 
 For full results, see [`summaries/`](summaries/):
 
