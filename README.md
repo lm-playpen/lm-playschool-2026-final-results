@@ -81,7 +81,7 @@ For the full set of games and scripts used for evaluation, see [lm-playschool-20
 | | Dialogue Architects | SCoRe_Qwen3.5-9B | 37.60 ▲ | 52.61 ▼ | 43.12 ▲ | 23.37 ▼ |
 | | LLP: Large Language Problems | llp-final | 54.61 ▲ | 48.63 ▼ | 59.23 ▲ | 22.09 ▼ |
 | **qwen3.5-27b** | | | **62.34** | **70.18** | **64.34** | **43.51** |
-| | SLED-BSU | Success Filtered Supervised Finetuned Model PRM Guided (Beam search, best-of-N) | 41.78 ▼ | 63.8 ▼ | 56.36 ▼ | 30.02 ▼ |
+| | SLED-BSU | Success Filtered Supervised Finetuned Model PRM Guided (Beam search, best-of-N) | 46.90 ▼ | 63.8 ▼ | 56.36 ▼ | 30.02 ▼ |
 
 
 For full results, see [`summaries/`](summaries/):
