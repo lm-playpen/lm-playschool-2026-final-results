@@ -1,0 +1,319 @@
+{
+  "meta": {
+    "game_name": "clockwork_courier",
+    "experiment_name": "egocentric",
+    "game_id": 8,
+    "results_folder": "SLED-BSU__Qwen3.5-27B-sft-ep1__prm-ep1-best_of_n",
+    "clem_version": "3.7.2",
+    "round_count": 2,
+    "completed": true
+  },
+  "player_models": {
+    "0": {
+      "model_spec": {
+        "model_name": "SLED-BSU__Qwen3.5-27B-sft-ep1__prm-ep1-best_of_n",
+        "_custom_runner": "prm_guided_eval",
+        "_prm_path": "/project/dristic/prm_eval/playpen-prm-diginyx/prm_checkpoint",
+        "_submission_root": "/project/dristic/prm_eval/playpen-prm-diginyx",
+        "_team": "SLED-BSU",
+        "_version": "prm-guided-best_of_n",
+        "backend": "huggingface_local",
+        "context_size": "262k",
+        "huggingface_id": "Qwen/Qwen3.5-27B",
+        "lookup_source": "/project/dristic/prm_eval/model_registry.json",
+        "model_config": {
+          "premade_chat_template": true,
+          "eos_to_cull": "<\\|im_end\\|>",
+          "chat_template_kwargs": {
+            "enable_thinking": false
+          },
+          "load_in_4bit": true,
+          "peft_model": "Diginyx/Qwen3.5-27B-sft-ep1"
+        },
+        "open_weight": true,
+        "parameters": "27B"
+      },
+      "gen_args": {
+        "temperature": 0.0,
+        "max_tokens": 2048
+      }
+    }
+  },
+  "players": {
+    "GM": {
+      "game_role": "Game Master",
+      "model_name": "programmatic"
+    },
+    "Player 1": {
+      "game_role": "Courier",
+      "model_name": "SLED-BSU__Qwen3.5-27B-sft-ep1__prm-ep1-best_of_n"
+    }
+  },
+  "turns": [
+    [
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2026-07-17T10:23:50.689518",
+        "action": {
+          "type": "send message",
+          "content": "You are a courier in a clockwork city. Everything in this city runs on a fixed, fully\npredictable schedule - nothing is random and nothing is hidden. Your job is to pick up\nand deliver parcels before the clock runs out.\n\nTHE MAP (coordinates are (column,row); (1,1) is the top-left cell)\n\n   12345678\n  +--------+\n 1|..#..#..|\n 2|..#.....|\n 3|......#A|\n 4|2#...p.x|\n 5|1.......|\n 6|..y...S.|\n 7|....#...|\n 8|#...q...|\n  +--------+\n\nLEGEND\nS = your start cell (you are here at t=0)\n# = wall (the border is also impassable)\n. = open floor\nA = gate cell(s); passable only while open (schedules below)\n1 = pickup cell of parcel 1; x = its delivery cell\n2 = pickup cell of parcel 2; y = its delivery cell\np, q = guard(s) drawn at their t=0 cell - THE GUARDS MOVE every tick along the routes listed below\n\nHOW TIME AND MOVEMENT WORK\n- Time advances in ticks t=0,1,2,... You start on cell (7,6) at t=0, FACING N.\n- You always have a facing direction (N, S, E or W). Each tick you make exactly one move:\n  F    = step one cell forward, in the direction you are facing\n  L    = turn 90 degrees left, in place (you do not move, but the tick is consumed)\n  R    = turn 90 degrees right, in place (you do not move, but the tick is consumed)\n  WAIT = do nothing for one tick\n  There are no absolute moves: to go \"north\" you must first be facing N, then move F.\n- One step t -> t+1 resolves in this exact order:\n  1. Your move resolves. Moving F into a wall, the map border, or a gate that is closed\n     at the arrival time t+1 is a BUMP: you stay where you are (facing unchanged) and\n     the tick is wasted. L, R and WAIT never bump.\n  2. Every guard moves to its position for time t+1.\n  3. If you are now on the same cell as a guard, you are CAUGHT. This applies even on\n     ticks where you only turned or waited. Passing a guard mid-move is safe; only\n     ending the tick on its cell gets you caught.\n  4. Otherwise, if you are on a parcel's pickup cell you automatically pick it up; if\n     you are on the delivery cell of a parcel you carry, you automatically deliver it.\n- If you are CAUGHT: you keep your parcels, but you are put back on your start cell\n  (7,6) facing N again, the rest of your current plan is cancelled, and the\n  cancelled moves' ticks are forfeited. Standing on a gate cell when it closes is safe.\n\nTHE SCHEDULES (fixed forever; you can compute every future position exactly)\nGate A at (8,3): open exactly when (t mod 2) is in {1}. So it is open at t=1,3,... and closed at t=0,2,... You can only step ONTO it at a tick t+1 where it is open.\nGuard P: walks a fixed cycle of length 8. Its position at tick t is determined by (t mod 8) as follows: t mod 8=0: (6,4); t mod 8=1: (7,4); t mod 8=2: (7,5); t mod 8=3: (8,5); t mod 8=4: (8,6); t mod 8=5: (8,5); t mod 8=6: (7,5); t mod 8=7: (7,4). This repeats forever.\nGuard Q: walks a fixed cycle of length 8. Its position at tick t is determined by (t mod 8) as follows: t mod 8=0: (5,8); t mod 8=1: (6,8); t mod 8=2: (6,7); t mod 8=3: (7,7); t mod 8=4: (7,8); t mod 8=5: (7,7); t mod 8=6: (6,7); t mod 8=7: (6,8). This repeats forever.\n\nYOUR JOB\nParcel 1: pick it up at (1,5) (map glyph '1'), deliver it to (8,4) (map glyph 'x'). Pickup and delivery happen automatically when you end a tick on the cell.\nParcel 2: pick it up at (1,4) (map glyph '2'), deliver it to (3,6) (map glyph 'y'). Pickup and delivery happen automatically when you end a tick on the cell.\nDeliver every parcel within 48 ticks. You move by committing to plans of\nexactly 6 moves at a time; you have at most 8 plans in total.\nIf you deliver the last parcel mid-plan, the game ends immediately and the unused\nmoves are discarded.\n\nWORKED EXAMPLE (for the rules only - this is NOT the map above): suppose you are at\n(2,2) facing N at t=0 and want to reach (3,2), which is to the east. Moving F now would\ntake you to (2,1) instead. The correct sequence is R (t=1, now facing E, still at\n(2,2)), then F (t=2, now at (3,2)). If (3,2) were a gate that is closed at t=2, that F\nwould BUMP and you would have to WAIT for a tick when it is open.\n\nAfter each plan you receive a per-tick log of what happened, including your resulting position.\n\nRESPOND IN EXACTLY THIS FORMAT (and put nothing after the PLAN line):\nTHOUGHTS: <your reasoning - any length; the referee ignores this>\nPOSITION: (x,y) FACING <N|S|E|W>\nPLAN: <exactly 6 moves from {F, L, R, WAIT}, separated by spaces>\n\nThe POSITION line must state the cell you predict you will occupy AND the direction you\npredict you will be facing AFTER your plan has executed. The referee records your\nprediction but will never confirm or correct it.\n\nGive your first response now.\n",
+          "label": "context"
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2026-07-17T10:23:50.689561",
+        "action": {
+          "type": "get message",
+          "content": "THOUGHTS: I need to pick up two parcels and deliver them within 48 ticks. Starting at (7,6) facing N at t=0. Let me plan the route:\n\n1. First, I need to go to (1,5) to pick up parcel 1, then to (8,4) to deliver it.\n2. Then I need to go to (1,4) to pick up parcel 2, then to (3,6) to deliver it.\n\nLet me map out the path from (7,6):\n- (7,6) is my start\n- (1,5) is pickup for parcel 1 - that's far west\n- (8,4) is delivery for parcel 1 - that's east and north from start\n- (1,4) is pickup for parcel 2 - far west again\n- (3,6) is delivery for parcel 2\n\nI need to be careful about the guards:\n- Guard P cycle: t mod 8 = 0: (6,4), 1: (7,4), 2: (7,5), 3: (8,5), 4: (8,6), 5: (8,5), 6: (7,5), 7: (7,4)\n- Guard Q cycle: t mod 8 = 0: (5,8), 1: (6,8), 2: (6,7), 3: (7,7), 4: (7,8), 5: (7,7), 6: (6,7), 7: (6,8)\n\nFrom (7,6) facing N, I need to turn to go west. Let me turn left (now facing W) and move west.\n\nt=0: at (7,6), facing N\nt=1: L - turn left, now facing W, still at (7,6)\nt=2: F - move to (6,6)\nt=3: F - move to (5,6)\nt=4: F - move to (4,6)\nt=5: F - move to (3,6) - this is the delivery spot for parcel 2, but I haven't picked it up yet!\n\nLet me reconsider. I should go to (1,5) first to pick up parcel 1.\n\nFrom (7,6) facing N:\nt=0: at (7,6), facing N\nt=1: L - turn left, facing W, at (7,6)\nt=2: F - move to (6,6)\nt=3: F - move to (5,6)\nt=4: F - move to (4,6)\nt=5: F - move to (3,6)\nt=6: F - move to (2,6)\nt=7: F - move to (1,6)\n\nBut (1,5) is the pickup for parcel 1, not (1,6). Let me check the map again:\n- (1,5) is '1' - pickup for parcel 1\n- (1,4) is '2' - pickup for parcel 2\n\nSo I need to get to (1,5) first. From (7,6), I need to go west to column 1, then north to row 5.\n\nt=0: at (7,6), facing N\nt=1: L - turn left, facing W, at (7,6)\nt=2: F - move to (6,6)\nt=3: F - move to (5,6)\nt=4: F - move to (4,6)\nt=5: F - move to (3,6)\nt=6: F - move to (2,6)\n\nNow at (2,6), I need to go north to row 5. Let me turn to face N.\n\nt=7: L - turn left, now facing S... wait, I'm facing W, so L would make me face S. I need R to face N.\n\nt=7: R - turn right, now facing N, at (2,6)\nt=8: F - move to (2,5)\nt=9: F - move to (2,4) - but (2,4) is not (1,5)\n\nI need to go to (1,5). From (2,4), I need to go west to (1,4), then south to (1,5)? No, that's wrong.\n\nLet me restart and think more carefully:\n- Start at (7,6)\n- Target: (1,5) for pickup parcel 1\n- Path: go west to column 1, then adjust row\n\nFrom (7,6) facing N:\nt=1: L - turn left, facing W, at (7,6)\nt=2: F - (6,6)\nt=3: F - (5,6)\nt=4: F - (4,6)\nt=5: F - (3,6)\nt=6: F - (2,6)\nt=7: F - (1,6)\n\nNow at (1,6), I need to go to (1,5). Turn to face S... no, (1,5) is north of (1,6). So I need to turn to face N.\n\nt=7: I'm facing W, need to turn to face N. R makes me face N.\nt=7: R - turn right, facing N, at (1,6)\nt=8: F - move to (1,5) - PICKUP PARCEL 1!\n\nGreat! Now I have parcel 1. Next, deliver to (8,4).\n\nFrom (1,5) facing N, I need to go to (8,4). That's east and south.\n\nt=9: L - turn left, facing W... no, I need to go east. R makes me face E.\nt=9: R - turn right, facing E, at (1,5)\nt=10: F - (2,5)\nt=11: F - (3,5)\nt=12: F - (4,5)\nt=13: F - (5,5)\nt=14: F - (6,5)\nt=15: F - (7,5) - but wait, at t=15, guard P is at (7,5)! That's a collision!\n\nLet me check guard P positions:\nt mod 8 = 0: (6,4)\nt mod 8 = 1: (7,4)\nt mod 8 = 2: (7,5)\nt mod 8 = 3: (8,5)\nt mod 8 = 4: (8,6)\nt mod 8 = 5: (8,5)\nt mod 8 = 6: (7,5)\nt mod 8 = 7: (7,4)\n\nSo at t=15, t mod 8 = 7, guard P is at (7,4), not (7,5). At t=14, t mod 8 = 6, guard P is at (7,5).\n\nLet me recalculate:\nt=8: at (1,5), facing N, just picked up parcel 1\nt=9: R - turn right, facing E, at (1,5)\nt=10: F - (2,5)\nt=11: F - (3,5)\nt=12: F - (4,5)\nt=13: F - (5,5)\nt=14: F - (6,5) - t=14, t mod 8 = 6, guard P at (7,5), safe\nt=15: F - (7,5) - t=15, t mod 8 = 7, guard P at (7,4), safe!\nt=16: F - (8,5) - t=16, t mod 8 = 0, guard P at (6,4), safe!\n\nBut I need to go to (8,4), not (8,5). From (8,5), I need to go north to (8,4).\n\nt=16: at (8,5), facing E. Need to turn to face N. L makes me face N.\nt=16: L - turn left, facing N, at (8,5)\nt=17: F - (8,4) - DELIVER PARCEL 1!\n\nBut wait, (8,4) is the gate A. Let me check: Gate A at (8,3) is open when t mod 2 is in {1}, so open at t=1,3,5,7,9,11,13,15,17,19,...\n\nAt t=17, t mod 2 = 1, so gate A is OPEN. But I'm going to (8,4),",
+          "label": "response"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-17T10:23:50.689646",
+        "action": {
+          "type": "reprompt",
+          "content": "missing or malformed POSITION line"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2026-07-17T10:26:12.762697",
+        "action": {
+          "type": "send message",
+          "content": "Your last response could not be processed: missing or malformed POSITION line.\nAnswer again, using exactly this format (and nothing after the PLAN line):\nTHOUGHTS: <your reasoning>\nPOSITION: (x,y) FACING <N|S|E|W>\nPLAN: <exactly 6 moves from {F, L, R, WAIT}, separated by spaces>",
+          "label": "context"
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2026-07-17T10:26:12.762740",
+        "action": {
+          "type": "get message",
+          "content": "THOUGHTS: Starting at (7,6) facing N at t=0. I need to pick up parcel 1 at (1,5) and parcel 2 at (1,4), then deliver parcel 1 to (8,4) and parcel 2 to (3,6). Let me plan the route carefully avoiding guards. First, I'll go west to column 1, then north to row 5 to pick up parcel 1. From (7,6) facing N: turn left to face W, then move west 6 times to reach (1,6), then turn right to face N and move north to (1,5).\n\nt=0: at (7,6), facing N\nt=1: L - turn left, facing W, at (7,6)\nt=2: F - (6,6)\nt=3: F - (5,6)\nt=4: F - (4,6)\nt=5: F - (3,6)\nt=6: F - (2,6)\n\nAfter this 6-move plan, I'll be at (2,6) facing W.\n\nPOSITION: (2,6) FACING W\nPLAN: L F F F F F",
+          "label": "response"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-17T10:26:12.762928",
+        "action": {
+          "type": "round_result",
+          "content": {
+            "round": 0,
+            "start_tick": 0,
+            "end_tick": 6,
+            "plan": [
+              "L",
+              "F",
+              "F",
+              "F",
+              "F",
+              "F"
+            ],
+            "events": [
+              {
+                "t": 1,
+                "move": "L",
+                "result": "OK",
+                "pos": [
+                  7,
+                  6
+                ],
+                "heading": "W",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 2,
+                "move": "F",
+                "result": "OK",
+                "pos": [
+                  6,
+                  6
+                ],
+                "heading": "W",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 3,
+                "move": "F",
+                "result": "OK",
+                "pos": [
+                  5,
+                  6
+                ],
+                "heading": "W",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 4,
+                "move": "F",
+                "result": "OK",
+                "pos": [
+                  4,
+                  6
+                ],
+                "heading": "W",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 5,
+                "move": "F",
+                "result": "OK",
+                "pos": [
+                  3,
+                  6
+                ],
+                "heading": "W",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              },
+              {
+                "t": 6,
+                "move": "F",
+                "result": "OK",
+                "pos": [
+                  2,
+                  6
+                ],
+                "heading": "W",
+                "pickups": [],
+                "deliveries": [],
+                "caught_by": null,
+                "gate": null
+              }
+            ],
+            "predicted_pos": [
+              2,
+              6
+            ],
+            "predicted_heading": "W",
+            "actual_pos": [
+              2,
+              6
+            ],
+            "actual_heading": "W",
+            "prediction_correct": 1,
+            "bumps": 0,
+            "caught": 0,
+            "forfeited_ticks": 0,
+            "deliveries_this_round": 0,
+            "delivered_total": 0,
+            "carrying": []
+          }
+        }
+      }
+    ],
+    [
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2026-07-17T10:28:22.784739",
+        "action": {
+          "type": "send message",
+          "content": "ROUND 1 RESULT (ticks 0 -> 6):\nt=1: L -> OK, now at (7,6).\nt=2: F -> OK, now at (6,6).\nt=3: F -> OK, now at (5,6).\nt=4: F -> OK, now at (4,6).\nt=5: F -> OK, now at (3,6).\nt=6: F -> OK, now at (2,6).\nSTATUS: tick 6 of 48. You are at (2,6), facing W. Carrying: nothing. Delivered: nothing. Rounds left: 7.\nRespond now in the required format: a POSITION line predicting your cell after your next plan, then a PLAN line with exactly 6 moves.",
+          "label": "context"
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2026-07-17T10:28:22.784782",
+        "action": {
+          "type": "get message",
+          "content": "THOUGHTS: I'm at (2,6) facing W. I need to continue to (1,6) then go north to (1,5) to pick up parcel 1. Let me move one more step west to (1,6), then turn right to face N, then move north to (1,5).\n\nt=6: at (2,6), facing W\nt=7: F - (1,6)\nt=8: R - turn right, facing N, at (1,6)\nt=9: F - (1,5) - PICKUP PARCEL 1!\nt=10: F - (1,4) - PICKUP PARCEL 2!\nt=11: F - (1,3)\n\nAfter this plan, I'll be at (1,3) facing N, carrying both parcels.\n\nPOSITION: (1,3) FACING N\nPLAN: F R F F F",
+          "label": "response"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-17T10:28:22.784875",
+        "action": {
+          "type": "reprompt",
+          "content": "the PLAN must contain exactly 6 moves, but 5 were given"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2026-07-17T10:30:27.996833",
+        "action": {
+          "type": "send message",
+          "content": "Your last response could not be processed: the PLAN must contain exactly 6 moves, but 5 were given.\nAnswer again, using exactly this format (and nothing after the PLAN line):\nTHOUGHTS: <your reasoning>\nPOSITION: (x,y) FACING <N|S|E|W>\nPLAN: <exactly 6 moves from {F, L, R, WAIT}, separated by spaces>",
+          "label": "context"
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2026-07-17T10:30:27.996877",
+        "action": {
+          "type": "get message",
+          "content": "THOUGHTS: I'm at (2,6) facing W. I need to continue to (1,6) then go north to (1,5) to pick up parcel 1. Let me move one more step west to (1,6), then turn right to face N, then move north to (1,5), then continue north to (1,4) to pick up parcel 2.\n\nt=6: at (2,6), facing W\nt=7: F - (1,6)\nt=8: R - turn right, facing N, at (1,6)\nt=9: F - (1,5) - PICKUP PARCEL 1!\nt=10: F - (1,4) - PICKUP PARCEL 2!\nt=11: WAIT - stay at (1,4)\n\nAfter this plan, I'll be at (1,4) facing N, carrying both parcels.\n\nPOSITION: (1,4) FACING N\nPLAN: F R F F WAIT",
+          "label": "response"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-17T10:30:27.996964",
+        "action": {
+          "type": "invalid format",
+          "content": "the PLAN must contain exactly 6 moves, but 5 were given"
+        }
+      }
+    ]
+  ],
+  "Aborted": 1,
+  "Lose": 0,
+  "Success": 0,
+  "episode_result": {
+    "outcome": "aborted",
+    "delivered": 0,
+    "num_parcels": 2,
+    "used_ticks": 6,
+    "tick_budget": 48,
+    "optimal_ticks": 25,
+    "rounds_played": 1,
+    "bumps": 0,
+    "captures": 0,
+    "forfeited_ticks": 0,
+    "predictions_correct": 1,
+    "predictions_total": 1,
+    "reprompts": 3
+  },
+  "Request Count": [
+    2,
+    2
+  ],
+  "Violated Request Count": [
+    1,
+    2
+  ],
+  "Parsed Request Count": [
+    1,
+    0
+  ]
+}

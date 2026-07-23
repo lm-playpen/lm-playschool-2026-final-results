@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "game_name": "clockwork_courier",
+    "experiment_name": "egocentric",
+    "game_id": 9,
+    "results_folder": "BSU-SLIM__Qwen3.5-9B-Base__playpen-prm-9b-best_of_n",
+    "clem_version": "3.7.2",
+    "round_count": 1,
+    "completed": true
+  },
+  "player_models": {
+    "0": {
+      "model_spec": {
+        "model_name": "BSU-SLIM__Qwen3.5-9B-Base__playpen-prm-9b-best_of_n",
+        "_custom_runner": "prm_search_eval",
+        "_method": "best_of_n",
+        "_prm_path": "/project/dristic/prm_eval/playpen-prm-9b/prm_checkpoint",
+        "_submission_root": "/project/dristic/prm_eval/playpen-prm-9b",
+        "_team": "BSU-SLIM",
+        "_version": "prm-search-best_of_n",
+        "backend": "huggingface_local",
+        "context_size": "32k",
+        "huggingface_id": "/project/dristic/prm_eval/playpen-prm-9b/base_policy_qwen35_9b",
+        "lookup_source": "/project/dristic/prm_eval/playpen/model_registry.json",
+        "model_config": {
+          "premade_chat_template": true,
+          "chat_template_kwargs": {
+            "enable_thinking": false
+          },
+          "eos_to_cull": "<\\|(?:im_end|endoftext)\\|>",
+          "padding_side": "left",
+          "load_in_4bit": true
+        },
+        "open_weight": true,
+        "parameters": "9B"
+      },
+      "gen_args": {
+        "temperature": 0.7,
+        "max_tokens": 1024
+      }
+    }
+  },
+  "players": {
+    "GM": {
+      "game_role": "Game Master",
+      "model_name": "programmatic"
+    },
+    "Player 1": {
+      "game_role": "Courier",
+      "model_name": "BSU-SLIM__Qwen3.5-9B-Base__playpen-prm-9b-best_of_n"
+    }
+  },
+  "turns": [
+    [
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2026-07-13T17:09:10.444762",
+        "action": {
+          "type": "send message",
+          "content": "You are a courier in a clockwork city. Everything in this city runs on a fixed, fully\npredictable schedule - nothing is random and nothing is hidden. Your job is to pick up\nand deliver parcels before the clock runs out.\n\nTHE MAP (coordinates are (column,row); (1,1) is the top-left cell)\n\n   12345678\n  +--------+\n 1|...A...p|\n 2|...#....|\n 3|..#...y.|\n 4|#...#..#|\n 5|...#.2.#|\n 6|.....q..|\n 7|x....1..|\n 8|.....#.S|\n  +--------+\n\nLEGEND\nS = your start cell (you are here at t=0)\n# = wall (the border is also impassable)\n. = open floor\nA = gate cell(s); passable only while open (schedules below)\n1 = pickup cell of parcel 1; x = its delivery cell\n2 = pickup cell of parcel 2; y = its delivery cell\np, q = guard(s) drawn at their t=0 cell - THE GUARDS MOVE every tick along the routes listed below\n\nHOW TIME AND MOVEMENT WORK\n- Time advances in ticks t=0,1,2,... You start on cell (8,8) at t=0, FACING N.\n- You always have a facing direction (N, S, E or W). Each tick you make exactly one move:\n  F    = step one cell forward, in the direction you are facing\n  L    = turn 90 degrees left, in place (you do not move, but the tick is consumed)\n  R    = turn 90 degrees right, in place (you do not move, but the tick is consumed)\n  WAIT = do nothing for one tick\n  There are no absolute moves: to go \"north\" you must first be facing N, then move F.\n- One step t -> t+1 resolves in this exact order:\n  1. Your move resolves. Moving F into a wall, the map border, or a gate that is closed\n     at the arrival time t+1 is a BUMP: you stay where you are (facing unchanged) and\n     the tick is wasted. L, R and WAIT never bump.\n  2. Every guard moves to its position for time t+1.\n  3. If you are now on the same cell as a guard, you are CAUGHT. This applies even on\n     ticks where you only turned or waited. Passing a guard mid-move is safe; only\n     ending the tick on its cell gets you caught.\n  4. Otherwise, if you are on a parcel's pickup cell you automatically pick it up; if\n     you are on the delivery cell of a parcel you carry, you automatically deliver it.\n- If you are CAUGHT: you keep your parcels, but you are put back on your start cell\n  (8,8) facing N again, the rest of your current plan is cancelled, and the\n  cancelled moves' ticks are forfeited. Standing on a gate cell when it closes is safe.\n\nTHE SCHEDULES (fixed forever; you can compute every future position exactly)\nGate A at (4,1): open exactly when (t mod 2) is in {0}. So it is open at t=0,2,... and closed at t=1,3,... You can only step ONTO it at a tick t+1 where it is open.\nGuard P: walks a fixed cycle of length 8. Its position at tick t is determined by (t mod 8) as follows: t mod 8=0: (8,1); t mod 8=1: (8,2); t mod 8=2: (8,3); t mod 8=3: (7,3); t mod 8=4: (7,4); t mod 8=5: (7,3); t mod 8=6: (8,3); t mod 8=7: (8,2). This repeats forever.\nGuard Q: walks a fixed cycle of length 4. Its position at tick t is determined by (t mod 4) as follows: t mod 4=0: (6,6); t mod 4=1: (6,5); t mod 4=2: (7,5); t mod 4=3: (6,5). This repeats forever.\n\nYOUR JOB\nParcel 1: pick it up at (6,7) (map glyph '1'), deliver it to (1,7) (map glyph 'x'). Pickup and delivery happen automatically when you end a tick on the cell.\nParcel 2: pick it up at (6,5) (map glyph '2'), deliver it to (7,3) (map glyph 'y'). Pickup and delivery happen automatically when you end a tick on the cell.\nDeliver every parcel within 48 ticks. You move by committing to plans of\nexactly 6 moves at a time; you have at most 8 plans in total.\nIf you deliver the last parcel mid-plan, the game ends immediately and the unused\nmoves are discarded.\n\nWORKED EXAMPLE (for the rules only - this is NOT the map above): suppose you are at\n(2,2) facing N at t=0 and want to reach (3,2), which is to the east. Moving F now would\ntake you to (2,1) instead. The correct sequence is R (t=1, now facing E, still at\n(2,2)), then F (t=2, now at (3,2)). If (3,2) were a gate that is closed at t=2, that F\nwould BUMP and you would have to WAIT for a tick when it is open.\n\nAfter each plan you receive a per-tick log of what happened, including your resulting position.\n\nRESPOND IN EXACTLY THIS FORMAT (and put nothing after the PLAN line):\nTHOUGHTS: <your reasoning - any length; the referee ignores this>\nPOSITION: (x,y) FACING <N|S|E|W>\nPLAN: <exactly 6 moves from {F, L, R, WAIT}, separated by spaces>\n\nThe POSITION line must state the cell you predict you will occupy AND the direction you\npredict you will be facing AFTER your plan has executed. The referee records your\nprediction but will never confirm or correct it.\n\nGive your first response now.\n",
+          "label": "context"
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2026-07-13T17:09:10.444805",
+        "action": {
+          "type": "get message",
+          "content": "THOUGHTS:\nI need to navigate from the start position (8,8) to deliver Parcel 1 to (1,7) and Parcel 2 to (7,3) within 48 ticks, using plans of 6 moves each.\nStarting state: t=0, Pos=(8,8), Facing=N.\n\n**Constraints & Threats:**\n1.  **Walls:** The map border and '#' cells are impassable. I must avoid them.\n2.  **Gate A (4,1):** Open at t % 2 == 0. Closed at t % 2 == 1. I can only step onto (4,1) at t=1 if (t+1)%2 == 0 => t is odd. Wait, the rule says \"step ONTO it at a tick t+1 where it is open\".\n    *   Schedule: Open when (t mod 2) is in {0}.\n    *   To enter at t=1: Need (1 mod 2) in {0}? No, 1 mod 2 = 1. Closed. Cannot enter.\n    *   To enter at t=2: Need (2 mod 2) in {0}? Yes. Open. Can enter.\n    *   To enter at t=3: Closed.\n    *   So I can only enter Gate A at even time steps t (2, 4, 6...).\n3.  **Guard P:**\n    *   Cycle length 8.\n    *   t%8=0: (8,1)\n    *   t%8=1: (8,2)\n    *   t%8=2: (8,3)\n    *   t%8=3: (7,3)\n    *   t%8=4: (7,4)\n    *   t%8=5: (7,3)\n    *   t%8=6: (8,3)\n    *   t%8=7: (8,2)\n    *   **Threat:** At t=2, Guard P is at (8,3). I start at (8,8). If I move S towards (8,7), (8,6), (8,5), (8,4), (8,3)... I will hit (8,3) at t=6. This is dangerous.\n    *   At t=3, Guard P is at (7,3). This is the delivery spot for Parcel 2. If I am there, I deliver Parcel 2. But if I am caught by the guard, I am reset to start. So I must ensure I don't arrive at (7,3) at a time when Guard P is there *unless* I am carrying Parcel 2? The rule says \"If you are CAUGHT... you keep your parcels\". This is bad. Losing progress is not good.\n    *   Wait, the rule says \"If you are CAUGHT: you keep your parcels\". So if I accidentally walk into a guard while carrying a parcel, I lose time but keep the parcel. I should try to avoid guards entirely to save time, or use the \"caught\" mechanic only if I already have the parcel I need to deliver *and* I have already delivered the other one? No, I need to deliver both.\n    *   Let's analyze the path to Parcel 1 first.\n4.  **Guard Q:**\n    *   Cycle length 4.\n    *   t%4=0: (6,6)\n    *   t%4=1: (6,5)\n    *   t%4=2: (7,5)\n    *   t%4=3: (6,5)\n    *   **Threat:** At t=2, Guard Q is at (7,5). Parcel 2 is at (6,5).\n    *   At t=4, Guard Q is at (6,5). This is the pickup spot for Parcel 2.\n\n**Route Planning Strategy:**\nI need to deliver Parcel 1 (Pickup at 6,7, Drop at 1,7) and Parcel 2 (Pickup at 6,5, Drop at 7,3).\n\n**Step 1: Get to Parcel 1 (6,7)**\n*   Start: (8,8). Target: (6,7).\n*   Path: (8,8) -> (7,8) -> (6,8) -> (6,7).\n*   Moves needed: W (to 7,8), W (to 6,8), N (to 6,7).\n*   Sequence: W, W,",
+          "label": "response"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-13T17:09:10.444886",
+        "action": {
+          "type": "reprompt",
+          "content": "missing or malformed POSITION line"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2026-07-13T17:11:02.923254",
+        "action": {
+          "type": "send message",
+          "content": "Your last response could not be processed: missing or malformed POSITION line.\nAnswer again, using exactly this format (and nothing after the PLAN line):\nTHOUGHTS: <your reasoning>\nPOSITION: (x,y) FACING <N|S|E|W>\nPLAN: <exactly 6 moves from {F, L, R, WAIT}, separated by spaces>",
+          "label": "context"
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2026-07-13T17:11:02.923299",
+        "action": {
+          "type": "get message",
+          "content": "THOUGHTS:\nStarting at t=0, I am at (8,8) facing North. My goal is to deliver Parcel 1 (pick at 6,7, drop at 1,7) and Parcel 2 (pick at 6,5, drop at 7,3).\nFirst, I need to reach Parcel 1 at (6,7).\nThe shortest path is West twice to (6,8), then North to (6,7).\nPath: (8,8) -> W -> (7,8) -> W -> (6,8) -> N -> (6,7).\nThis takes 3 moves. I have 3 moves remaining in this plan.\nI will extend the path with 3 WAIT moves to fill the 6-move plan.\nSequence: W, W, N, WAIT, WAIT, WAIT.\nLet's verify safety for this plan:\nt=0: Pos=(8,8), Face=N.\nt=1: Move W to (7,8). Guard P is at (8,1). Guard Q is at (6,6). Safe.\nt=2: Move W to (6,8). Guard P is at (8,2). Guard Q is at (6,5). Safe.\nt=3: Move N to (6,7). Guard P is at (8,3). Guard Q is at (6,5). Safe. (Arrive at pickup).\nt=4: WAIT. Pos=(6,7). Guard P is at (8,3). Guard Q is at (7,5). Safe.\nt=5: WAIT. Pos=(6,7). Guard P is at (8,4) [Wait, cycle logic: t%8=4 -> (7,4)]. Guard Q is at (6,5). I am at (6,7), Guard Q is at (6,5). Safe.\nt=6: WAIT. Pos=(6,7). Guard P is at (8,5) [t%8=5 -> (7,3)]. Guard Q is at (6,5). I am at (6,7), Guard Q is at (6,5). Safe.\nI successfully pick up Parcel 1 at the end of the plan (since I ended on 6,7 at t=3, and pickup happens when ending a tick on the cell).\nI will execute W W N WAIT WAIT WAIT.\nAfter the plan, I am at (6,7) facing West (since last move was N? No, started N, turned W, turned W, moved N. Facing is North).\nWait, let's retrace facing:\nStart: N.\nMove W -> Facing W.\nMove W -> Facing W.\nMove N -> Facing N.\nWait -> Facing N.\nWait -> Facing N.\nWait -> Facing N.\nSo final facing is N.\nPosition is (6,7).\n\nTHOUGHTS:\nStarting at t=0, I am at (8,8) facing North. My immediate goal is to reach Parcel 1 located at (6,7).\nThe optimal path from (8,8) to (6,7) is to move West twice to reach column 6, then move North once to reach row 7.\nThis requires 3 moves: West, West, North.\nI will pad the remaining 3 moves of the plan with 'WAIT' commands to satisfy the \"exactly 6 moves\" constraint.\nProposed Plan: W W N WAIT WAIT WAIT.\n\nLet's verify safety and mechanics for this sequence:\n- Start: t=0, Pos=(8,8), Facing=N.\n- t=1: Move West. New Pos=(7,8). Facing=W.\n  - Guard P at t=1 is at (8,2). I am at (7,8). Safe.\n  - Guard Q at t=1 is at (6,5). I am at (7,8). Safe.\n- t=2: Move West. New Pos=(6,8). Facing=W.\n  - Guard P at t=2 is at (8,3). I am at (6,8). Safe.\n  - Guard Q at t=2 is at (7,5). I am at (6,8). Safe.\n- t=3: Move North. New Pos=(6,7). Facing=N.\n  - Guard P at t=3 is at (7,3). I am at (6,7). Safe.\n  - Guard Q at t=3 is at (6,5). I am at (6,7). Safe.\n  - I am now on cell (6,7), which contains Parcel 1.",
+          "label": "response"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-13T17:11:02.923383",
+        "action": {
+          "type": "invalid format",
+          "content": "missing or malformed POSITION line"
+        }
+      }
+    ]
+  ],
+  "Aborted": 1,
+  "Lose": 0,
+  "Success": 0,
+  "episode_result": {
+    "outcome": "aborted",
+    "delivered": 0,
+    "num_parcels": 2,
+    "used_ticks": 0,
+    "tick_budget": 48,
+    "optimal_ticks": 24,
+    "rounds_played": 0,
+    "bumps": 0,
+    "captures": 0,
+    "forfeited_ticks": 0,
+    "predictions_correct": 0,
+    "predictions_total": 0,
+    "reprompts": 2
+  },
+  "Request Count": [
+    2
+  ],
+  "Violated Request Count": [
+    2
+  ],
+  "Parsed Request Count": [
+    0
+  ]
+}

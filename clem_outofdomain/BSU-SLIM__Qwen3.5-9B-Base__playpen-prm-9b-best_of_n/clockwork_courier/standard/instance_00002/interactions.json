@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "game_name": "clockwork_courier",
+    "experiment_name": "standard",
+    "game_id": 2,
+    "results_folder": "BSU-SLIM__Qwen3.5-9B-Base__playpen-prm-9b-best_of_n",
+    "clem_version": "3.7.2",
+    "round_count": 1,
+    "completed": true
+  },
+  "player_models": {
+    "0": {
+      "model_spec": {
+        "model_name": "BSU-SLIM__Qwen3.5-9B-Base__playpen-prm-9b-best_of_n",
+        "_custom_runner": "prm_search_eval",
+        "_method": "best_of_n",
+        "_prm_path": "/project/dristic/prm_eval/playpen-prm-9b/prm_checkpoint",
+        "_submission_root": "/project/dristic/prm_eval/playpen-prm-9b",
+        "_team": "BSU-SLIM",
+        "_version": "prm-search-best_of_n",
+        "backend": "huggingface_local",
+        "context_size": "32k",
+        "huggingface_id": "/project/dristic/prm_eval/playpen-prm-9b/base_policy_qwen35_9b",
+        "lookup_source": "/project/dristic/prm_eval/playpen/model_registry.json",
+        "model_config": {
+          "premade_chat_template": true,
+          "chat_template_kwargs": {
+            "enable_thinking": false
+          },
+          "eos_to_cull": "<\\|(?:im_end|endoftext)\\|>",
+          "padding_side": "left",
+          "load_in_4bit": true
+        },
+        "open_weight": true,
+        "parameters": "9B"
+      },
+      "gen_args": {
+        "temperature": 0.7,
+        "max_tokens": 1024
+      }
+    }
+  },
+  "players": {
+    "GM": {
+      "game_role": "Game Master",
+      "model_name": "programmatic"
+    },
+    "Player 1": {
+      "game_role": "Courier",
+      "model_name": "BSU-SLIM__Qwen3.5-9B-Base__playpen-prm-9b-best_of_n"
+    }
+  },
+  "turns": [
+    [
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2026-07-13T15:22:17.278686",
+        "action": {
+          "type": "send message",
+          "content": "You are a courier in a clockwork city. Everything in this city runs on a fixed, fully\npredictable schedule - nothing is random and nothing is hidden. Your job is to pick up\nand deliver parcels before the clock runs out.\n\nTHE MAP (coordinates are (column,row); (1,1) is the top-left cell)\n\n   123456789\n  +---------+\n 1|S..A..#..|\n 2|...#B#...|\n 3|#........|\n 4|.#..#....|\n 5|.x.......|\n 6|......#p.|\n 7|y...#..##|\n 8|.2.....1#|\n 9|#..#..###|\n  +---------+\n\nLEGEND\nS = your start cell (you are here at t=0)\n# = wall (the border is also impassable)\n. = open floor\nA, B = gate cell(s); passable only while open (schedules below)\n1 = pickup cell of parcel 1; x = its delivery cell\n2 = pickup cell of parcel 2; y = its delivery cell\np, q = guard(s) drawn at their t=0 cell - THE GUARDS MOVE every tick along the routes listed below\n\nHOW TIME AND MOVEMENT WORK\n- Time advances in ticks t=0,1,2,... You start on cell (1,1) at t=0.\n- Each tick you make exactly one move: N (up), S (down), E (right), W (left), or WAIT.\n- One step t -> t+1 resolves in this exact order:\n  1. Your move resolves. Moving into a wall, the map border, or a gate that is closed\n     at the arrival time t+1 is a BUMP: you stay where you are and the tick is wasted.\n     WAIT never bumps.\n  2. Every guard moves to its position for time t+1.\n  3. If you are now on the same cell as a guard, you are CAUGHT. Passing a guard\n     mid-move is safe; only ending the tick on its cell gets you caught.\n  4. Otherwise, if you are on a parcel's pickup cell you automatically pick it up; if\n     you are on the delivery cell of a parcel you carry, you automatically deliver it.\n- If you are CAUGHT: you keep your parcels, but you are put back on your start cell\n  (1,1), the rest of your current plan is cancelled, and the cancelled moves' ticks\n  are forfeited. Standing on a gate cell when it closes is safe - gates never trap you.\n\nTHE SCHEDULES (fixed forever; you can compute every future position exactly)\nGate A at (4,1): open exactly when (t mod 4) is in {2, 3}. So it is open at t=2,3,6,7,... and closed at t=0,1,4,5,... You can only step ONTO it at a tick t+1 where it is open.\nGate B at (5,2): open exactly when (t mod 2) is in {1}. So it is open at t=1,3,... and closed at t=0,2,... You can only step ONTO it at a tick t+1 where it is open.\nGuard P: walks a fixed cycle of length 6. Its position at tick t is determined by (t mod 6) as follows: t mod 6=0: (8,6); t mod 6=1: (8,5); t mod 6=2: (8,4); t mod 6=3: (7,4); t mod 6=4: (8,4); t mod 6=5: (8,5). This repeats forever.\nGuard Q: walks a fixed cycle of length 6. Its position at tick t is determined by (t mod 6) as follows: t mod 6=0: (2,8); t mod 6=1: (3,8); t mod 6=2: (3,9); t mod 6=3: (2,9); t mod 6=4: (3,9); t mod 6=5: (3,8). This repeats forever.\n\nYOUR JOB\nParcel 1: pick it up at (8,8) (map glyph '1'), deliver it to (2,5) (map glyph 'x'). Pickup and delivery happen automatically when you end a tick on the cell.\nParcel 2: pick it up at (2,8) (map glyph '2'), deliver it to (1,7) (map glyph 'y'). Pickup and delivery happen automatically when you end a tick on the cell.\nDeliver every parcel within 45 ticks. You move by committing to plans of\nexactly 5 moves at a time; you have at most 9 plans in total.\nIf you deliver the last parcel mid-plan, the game ends immediately and the unused\nmoves are discarded.\n\nWORKED EXAMPLE (for the rules only - this is NOT the map above): suppose you stand at\n(2,2), gate G at (3,2) has period 2 and is open when (t mod 2) = 1, and it is now t=0.\nMoving E now (arriving at t=1, when the gate is open) succeeds. But moving E at t=1\n(arriving at t=2, when the gate is closed) is a BUMP: you stay at (2,2) and tick 2 is\nwasted. The right play at t=1 is to WAIT once and then move E, arriving at t=3 when\nthe gate is open again.\n\nAfter each plan you receive a per-tick log of what happened, including your resulting position.\n\nRESPOND IN EXACTLY THIS FORMAT (and put nothing after the PLAN line):\nTHOUGHTS: <your reasoning - any length; the referee ignores this>\nPOSITION: (x,y)\nPLAN: <exactly 5 moves from {N, S, E, W, WAIT}, separated by spaces>\n\nThe POSITION line must state the cell you predict you will occupy AFTER your plan has\nexecuted. The referee records your prediction but will never confirm or correct it.\n\nGive your first response now.\n",
+          "label": "context"
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2026-07-13T15:22:17.278730",
+        "action": {
+          "type": "get message",
+          "content": "THOUGHTS:\nI need to deliver Parcel 1 (Pickup at 8,8 -> Deliver at 2,5) and Parcel 2 (Pickup at 2,8 -> Deliver at 1,7) within 45 ticks. I start at (1,1) at t=0.\n\nFirst, let's analyze the threats and goals.\n- **Guard Q** is in cell (2,8) at t=0. Its cycle is length 6.\n  - t%6=0: (2,8) -> CAUGHT immediately if I move there or stay there.\n  - t%6=1: (3,8)\n  - t%6=2: (3,9)\n  - t%6=3: (2,9)\n  - t%6=4: (3,9)\n  - t%6=5: (3,8)\n  \n  Since I start at (1,1), the path to (2,8) seems clear of Q initially. However, Q is at (2,8) at t=0. If I am at (2,8) at any time t where t%6=0, I get caught.\n  \n  To pick up Parcel 2, I must reach (2,8).\n  - If I arrive at (2,8) at t=1, Q is at (3,8). Safe.\n  - If I arrive at (2,8) at t=2, Q is at (3,9). Safe.\n  - If I arrive at (2,8) at t=3, Q is at (2,9). Safe.\n  - If I arrive at (2,8) at t=4, Q is at (3,9). Safe.\n  - If I arrive at (2,8) at t=5, Q is at (3,8). Safe.\n  - If I arrive at (2,8) at t=6, Q is at (2,8). **CAUGHT**.\n  \n  So I must avoid being at (2,8) when t is a multiple of 6. The earliest I can pick up Parcel 2 is t=1 (arriving at 2,8 at t=1).\n  Path from (1,1) to (2,8):\n  (1,1) -> (2,1) [E] -> ... -> (2,8) [S x6].\n  Total 7 steps to reach (2,8).\n  Let's check the collision times for this path:\n  t=0: (1,1)\n  t=1: (2,1). Q is at (3,8). Safe.\n  t=2: (3,1). Q is at (3,9). Safe.\n  t=3: (3,2). Q is at (2,9). Safe.\n  t=4: (3,3). Q is at (3,9). Safe.\n  t=5: (3,4). Q is at (3,8). Safe. (Note: Q is at (3,8) at t=5, but I am at (3,4). Safe.)\n  t=6: (3,5). Q is at (2,8). Safe.\n  t=7: (3,6). Q is at (2,8). Safe.\n  t=8: (3,7). Q is at (3,8). Safe.\n  t=9: (3,8). Q is at (3,9). Safe. (Wait, at t=9, Q is at (3,8). If I move S to (3,8) at t=9, I arrive at (3,8) at t=9. Q is at (3,8) at t=9? No, Q at t=9 is 9%6=3 -> (2,9). So I am at (3,8), Q is at (2,9). Safe.)\n  Wait, I need to get to (2,8).\n  Let's re-evaluate the path to (2,8).\n  Current plan idea: Go East to (2,1), then South to (2,8).\n  Moves: E, S, S, S, S, S, S.\n  Positions:\n  t=0: (1,1)\n  Move E -> t=1: (2,1). Q pos at t=1 is (3,8). Safe.\n  Move S -> t=2: (3,1). Q pos at t=2 is (3",
+          "label": "response"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-13T15:22:17.278835",
+        "action": {
+          "type": "reprompt",
+          "content": "missing or malformed POSITION line"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2026-07-13T15:24:09.912740",
+        "action": {
+          "type": "send message",
+          "content": "Your last response could not be processed: missing or malformed POSITION line.\nAnswer again, using exactly this format (and nothing after the PLAN line):\nTHOUGHTS: <your reasoning>\nPOSITION: (x,y)\nPLAN: <exactly 5 moves from {N, S, E, W, WAIT}, separated by spaces>",
+          "label": "context"
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2026-07-13T15:24:09.912788",
+        "action": {
+          "type": "get message",
+          "content": "THOUGHTS: I need to deliver Parcel 2 (Pickup at 2,8 -> Deliver at 1,7) and Parcel 1 (Pickup at 8,8 -> Deliver at 2,5) within 45 ticks. I start at (1,1). Gate B is at (5,2) and is open when t%2 == 1. I cannot pass through (5,2) at t=0, 2, 4, etc. I must wait for an odd tick to enter it. My first move is East to (2,1). At t=1, I am at (2,1) and Gate B (at 5,2) is open? No, t=1 means I arrived at t=1. The condition is \"step ONTO it at a tick t+1 where it is open\". If I move East at t=0, I arrive at t=1. Gate B is at (5,2). It is open at t%2=1. So moving E to (2,1) is safe regarding Gate B because (2,1) != (5,2). The distance from (1,1) to (2,1) is 1 step. Then I need to get to (5,2) to pick up Parcel 2? No, Parcel 2 is at (2,8). Wait, I misread the map. Let's re-verify coordinates.\nMap:\n123456789\nS..A..#.. (Row 1: S at 1, A at 4)\n...#B#... (Row 2: # at 4, B at 5, # at 7)\nSo Parcel 2 is at (2,8).\nMy start is (1,1).\nTo get to (2,8), I need to move E to (2,1), then S to (2,2), S to (2,3), S to (2,4), S to (2,5), S to (2,6), S to (2,7), S to (2,8).\nThis is 1 East move and 7 South moves. Total 8 moves.\nI can do 1 East, 1 South, 1 South, 1 South, 1 South. That gets me to (2,5).\nAt t=0, start (1,1).\nMove E -> t=1, pos (2,1). Gate B is at (5,2). Open at t%2=1? Yes. But I am at (2,1), not (5,2). So no gate collision.\nMove S -> t=2, pos (2,2). Gate B open at t%2=2? No (closed). But I am at (2,2), not (5,2). Safe.\nMove S -> t=3, pos (2,3). Gate B open at t%2=1? Yes. I am at (2,3). Safe.\nMove S -> t=4, pos (2,4). Gate B closed at t%2=0 (since 4%2=0). I am at (2,4). Safe.\nMove S -> t=5, pos (2,5). Gate B closed at t%2=1 (since 5%2=1). Wait, 5%2=1. Gate B is OPEN at t=5. But I am at (2,5). Gate B is at (5,2). Different cells. Safe.\nAlso need to check guards.\nGuard Q cycle: (2,8) at t%6=0.\nAt t=5, Q is at (3,8) (since 5%6=5). I am at (2,5). Safe.\nSo Plan 1: E S S S S.\nEnds at (2,5).\nAt (2,5), I pick up Parcel 1? No, Parcel 1 is at (8,8) and delivers to (2,5). So I pick up Parcel 1 at t=5.\nNow I have Parcel 1. I need to deliver it to (2,5)? Wait, pickup is (8,8), delivery is (2,5).\nYes, so at (2,5) I pick up Parcel 1.\nNow I have Parcel 1. I need to go to (1,7) to deliver it? No, Parcel 1 delivers to (2,5). I am at (2,5). So Parcel 1 is delivered.\nBut I also need to deliver Parcel 2. Parcel 2 is at (2,8). I am currently at (",
+          "label": "response"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-13T15:24:09.912871",
+        "action": {
+          "type": "invalid format",
+          "content": "missing or malformed POSITION line"
+        }
+      }
+    ]
+  ],
+  "Aborted": 1,
+  "Lose": 0,
+  "Success": 0,
+  "episode_result": {
+    "outcome": "aborted",
+    "delivered": 0,
+    "num_parcels": 2,
+    "used_ticks": 0,
+    "tick_budget": 45,
+    "optimal_ticks": 26,
+    "rounds_played": 0,
+    "bumps": 0,
+    "captures": 0,
+    "forfeited_ticks": 0,
+    "predictions_correct": 0,
+    "predictions_total": 0,
+    "reprompts": 2
+  },
+  "Request Count": [
+    2
+  ],
+  "Violated Request Count": [
+    2
+  ],
+  "Parsed Request Count": [
+    0
+  ]
+}

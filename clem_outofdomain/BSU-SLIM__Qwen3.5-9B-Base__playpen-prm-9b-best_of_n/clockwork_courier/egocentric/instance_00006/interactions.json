@@ -1,0 +1,142 @@
+{
+  "meta": {
+    "game_name": "clockwork_courier",
+    "experiment_name": "egocentric",
+    "game_id": 6,
+    "results_folder": "BSU-SLIM__Qwen3.5-9B-Base__playpen-prm-9b-best_of_n",
+    "clem_version": "3.7.2",
+    "round_count": 1,
+    "completed": true
+  },
+  "player_models": {
+    "0": {
+      "model_spec": {
+        "model_name": "BSU-SLIM__Qwen3.5-9B-Base__playpen-prm-9b-best_of_n",
+        "_custom_runner": "prm_search_eval",
+        "_method": "best_of_n",
+        "_prm_path": "/project/dristic/prm_eval/playpen-prm-9b/prm_checkpoint",
+        "_submission_root": "/project/dristic/prm_eval/playpen-prm-9b",
+        "_team": "BSU-SLIM",
+        "_version": "prm-search-best_of_n",
+        "backend": "huggingface_local",
+        "context_size": "32k",
+        "huggingface_id": "/project/dristic/prm_eval/playpen-prm-9b/base_policy_qwen35_9b",
+        "lookup_source": "/project/dristic/prm_eval/playpen/model_registry.json",
+        "model_config": {
+          "premade_chat_template": true,
+          "chat_template_kwargs": {
+            "enable_thinking": false
+          },
+          "eos_to_cull": "<\\|(?:im_end|endoftext)\\|>",
+          "padding_side": "left",
+          "load_in_4bit": true
+        },
+        "open_weight": true,
+        "parameters": "9B"
+      },
+      "gen_args": {
+        "temperature": 0.7,
+        "max_tokens": 1024
+      }
+    }
+  },
+  "players": {
+    "GM": {
+      "game_role": "Game Master",
+      "model_name": "programmatic"
+    },
+    "Player 1": {
+      "game_role": "Courier",
+      "model_name": "BSU-SLIM__Qwen3.5-9B-Base__playpen-prm-9b-best_of_n"
+    }
+  },
+  "turns": [
+    [
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2026-07-13T16:58:07.271446",
+        "action": {
+          "type": "send message",
+          "content": "You are a courier in a clockwork city. Everything in this city runs on a fixed, fully\npredictable schedule - nothing is random and nothing is hidden. Your job is to pick up\nand deliver parcels before the clock runs out.\n\nTHE MAP (coordinates are (column,row); (1,1) is the top-left cell)\n\n   12345678\n  +--------+\n 1|...#yx..|\n 2|....p...|\n 3|......#A|\n 4|1###..#.|\n 5|..#.S...|\n 6|.......#|\n 7|.#......|\n 8|...2#...|\n  +--------+\n\nLEGEND\nS = your start cell (you are here at t=0)\n# = wall (the border is also impassable)\n. = open floor\nA = gate cell(s); passable only while open (schedules below)\n1 = pickup cell of parcel 1; x = its delivery cell\n2 = pickup cell of parcel 2; y = its delivery cell\np, q = guard(s) drawn at their t=0 cell - THE GUARDS MOVE every tick along the routes listed below\n\nHOW TIME AND MOVEMENT WORK\n- Time advances in ticks t=0,1,2,... You start on cell (5,5) at t=0, FACING N.\n- You always have a facing direction (N, S, E or W). Each tick you make exactly one move:\n  F    = step one cell forward, in the direction you are facing\n  L    = turn 90 degrees left, in place (you do not move, but the tick is consumed)\n  R    = turn 90 degrees right, in place (you do not move, but the tick is consumed)\n  WAIT = do nothing for one tick\n  There are no absolute moves: to go \"north\" you must first be facing N, then move F.\n- One step t -> t+1 resolves in this exact order:\n  1. Your move resolves. Moving F into a wall, the map border, or a gate that is closed\n     at the arrival time t+1 is a BUMP: you stay where you are (facing unchanged) and\n     the tick is wasted. L, R and WAIT never bump.\n  2. Every guard moves to its position for time t+1.\n  3. If you are now on the same cell as a guard, you are CAUGHT. This applies even on\n     ticks where you only turned or waited. Passing a guard mid-move is safe; only\n     ending the tick on its cell gets you caught.\n  4. Otherwise, if you are on a parcel's pickup cell you automatically pick it up; if\n     you are on the delivery cell of a parcel you carry, you automatically deliver it.\n- If you are CAUGHT: you keep your parcels, but you are put back on your start cell\n  (5,5) facing N again, the rest of your current plan is cancelled, and the\n  cancelled moves' ticks are forfeited. Standing on a gate cell when it closes is safe.\n\nTHE SCHEDULES (fixed forever; you can compute every future position exactly)\nGate A at (8,3): open exactly when (t mod 6) is in {3, 4, 5}. So it is open at t=3,4,5,9,10,11,... and closed at t=0,1,2,6,7,8,... You can only step ONTO it at a tick t+1 where it is open.\nGuard P: walks a fixed cycle of length 6. Its position at tick t is determined by (t mod 6) as follows: t mod 6=0: (5,2); t mod 6=1: (4,2); t mod 6=2: (3,2); t mod 6=3: (3,1); t mod 6=4: (3,2); t mod 6=5: (4,2). This repeats forever.\nGuard Q: walks a fixed cycle of length 8. Its position at tick t is determined by (t mod 8) as follows: t mod 8=0: (6,1); t mod 8=1: (7,1); t mod 8=2: (8,1); t mod 8=3: (8,2); t mod 8=4: (7,2); t mod 8=5: (8,2); t mod 8=6: (8,1); t mod 8=7: (7,1). This repeats forever.\n\nYOUR JOB\nParcel 1: pick it up at (1,4) (map glyph '1'), deliver it to (6,1) (map glyph 'x'). Pickup and delivery happen automatically when you end a tick on the cell.\nParcel 2: pick it up at (4,8) (map glyph '2'), deliver it to (5,1) (map glyph 'y'). Pickup and delivery happen automatically when you end a tick on the cell.\nDeliver every parcel within 48 ticks. You move by committing to plans of\nexactly 6 moves at a time; you have at most 8 plans in total.\nIf you deliver the last parcel mid-plan, the game ends immediately and the unused\nmoves are discarded.\n\nWORKED EXAMPLE (for the rules only - this is NOT the map above): suppose you are at\n(2,2) facing N at t=0 and want to reach (3,2), which is to the east. Moving F now would\ntake you to (2,1) instead. The correct sequence is R (t=1, now facing E, still at\n(2,2)), then F (t=2, now at (3,2)). If (3,2) were a gate that is closed at t=2, that F\nwould BUMP and you would have to WAIT for a tick when it is open.\n\nAfter each plan you receive a per-tick log of what happened, including your resulting position.\n\nRESPOND IN EXACTLY THIS FORMAT (and put nothing after the PLAN line):\nTHOUGHTS: <your reasoning - any length; the referee ignores this>\nPOSITION: (x,y) FACING <N|S|E|W>\nPLAN: <exactly 6 moves from {F, L, R, WAIT}, separated by spaces>\n\nThe POSITION line must state the cell you predict you will occupy AND the direction you\npredict you will be facing AFTER your plan has executed. The referee records your\nprediction but will never confirm or correct it.\n\nGive your first response now.\n",
+          "label": "context"
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2026-07-13T16:58:07.271488",
+        "action": {
+          "type": "get message",
+          "content": "THOUGHTS: I start at (5,5) facing N at t=0. My first goal is to get Parcel 1 from (1,4) to (6,1).\nTo move North from (5,5), I need to go to (5,4), but there is a wall at (4,5) which blocks West movement? No, looking at the map:\nRow 5 is `..#.S...`. The walls in row 5 are at columns 4 (`#`).\nSo at (5,5), facing N, I cannot move F (North) because (4,5) is a wall? Wait, coordinates are (column, row).\nMap Row 5: `..#.S...`\nColumns: 1 2 3 4 5 6 7 8\nChars:   . . # . S . . .\nSo at Col 4 there is a Wall `#`. At Col 5 is `S` (Start).\nIf I am facing N, I try to move F from (5,5) to (4,5). But (4,5) is a Wall. This is a BUMP. I stay at (5,5).\nI must turn to avoid the wall.\nLet's check the map layout for obstacles near start:\nRow 5: `..#.S...` -> Walls at (4,5).\nRow 4: `1###..#.` -> Walls at (4,4), (5,4), (6,4), (8,4). Also '1' at (4,4)? No, '1' is at (1,4) according to legend.\nWait, let's re-read the map glyphs vs coordinates.\nLegend: `1` = pickup cell of parcel 1. Map shows `1` at Row 4, Col 1.\nMap Row 4: `1###..#.`\nSo at (1,4) is '1'. Then `#` at (2,4), `#` at (3,4), `#` at (4,4)? No, the string is `1###..#.`.\nIndices:\n1: '1'\n2: '#'\n3: '#'\n4: '#'\n5: '.'\n6: '.'\n7: '#'\n8: '.'\nSo walls at (2,4), (3,4), (4,4).\nI am at (5,5).\nTarget for Parcel 1 is (1,4).\nI need to go West from (5,5) to (5,4)?\nCheck Row 5 again: `..#.S...`\nIndices:\n1: '.'\n2: '.'\n3: '#'\n4: '.'\n5: 'S'\n6: '.'\n7: '.'\n8: '.'\nWait, my previous reading of Row 5 was wrong.\nRow 5 string: `..#.S...`\nCol 1: .\nCol 2: .\nCol 3: #\nCol 4: .\nCol 5: S\nCol 6: .\nCol 7: .\nCol 8: .\nSo at (5,5), moving W leads to (4,5) which is `.` (open). Moving N leads to (5,4) which is `.` (open).\nWait, let's re-read Row 4 string: `1###..#.`\nCol 1: '1'\nCol 2: #\nCol 3: #\nCol 4: #\nCol 5: .\nCol 6: .\nCol 7: #\nCol 8: .\nSo (5,4) is open. (4,5) is open.\nOkay, so from (5,5) I can move N or W.\nBut I need to go to (1,4).\nPath: (5,5) -> (5,4) -> (4,4)? No, (4,4) is a wall `#`.\nSo I cannot go West past column 4 because (4,4) is blocked.\nSo I must go North to (5,4).\nFrom (5,4), I need to go West to (1,4).\nPath: (5,4) -> (4,4) is blocked by wall.\nSo I must go North, then East/West?\nLet's check Row 4 again. Walls at 2, 3, 4. Open at 1, 5, 6, 8.\nI am at (5,4) (after moving N from 5,5).\nI need to go to (1,4).\nFrom (5,4), I",
+          "label": "response"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-13T16:58:07.271586",
+        "action": {
+          "type": "reprompt",
+          "content": "missing or malformed POSITION line"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2026-07-13T17:00:00.145102",
+        "action": {
+          "type": "send message",
+          "content": "Your last response could not be processed: missing or malformed POSITION line.\nAnswer again, using exactly this format (and nothing after the PLAN line):\nTHOUGHTS: <your reasoning>\nPOSITION: (x,y) FACING <N|S|E|W>\nPLAN: <exactly 6 moves from {F, L, R, WAIT}, separated by spaces>",
+          "label": "context"
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2026-07-13T17:00:00.145146",
+        "action": {
+          "type": "get message",
+          "content": "THOUGHTS: I start at (5,5) facing N at t=0. My first goal is Parcel 1: Pickup at (1,4), Deliver at (6,1).\nAt t=0, I am at (5,5). I need to move North to (5,4) because (4,5) is a wall (Row 5 is `..#.S...`, so Col 4 is `.` but wait, let me re-verify the map string carefully).\nMap Row 5: `..#.S...`\nChars: 1=., 2=., 3=#, 4=., 5=S, 6=., 7=., 8=.\nWait, my previous analysis of Row 5 was:\nCol 1: .\nCol 2: .\nCol 3: #\nCol 4: .\nCol 5: S\nSo (4,5) is indeed open.\nBut let's look at Row 4: `1###..#.`\nChars: 1=1, 2=#, 3=#, 4=#, 5=., 6=., 7=#, 8=.\nSo (4,4) is a Wall (#).\nIf I move West from (5,5) to (4,5), then at t=1 I am at (4,5).\nFrom (4,5), I need to go West to (3,5)?\nRow 5 at Col 3 is #. So (3,5) is blocked.\nSo West path from (5,5) is blocked immediately at step 2 (if I try to go W twice) or I hit the wall at (3,5) or (4,5) is blocked by something else?\nWait, if I am at (5,5) and go West, I land on (4,5). Then I try to go West again to (3,5). But (3,5) is a Wall (#). So I would bump.\nSo I cannot go West directly from (5,5) because I will hit the wall at (3,5) before reaching (1,4).\nSo I must change direction.\nLet's try going North from (5,5).\nRow 4 at Col 5 is `.` (since Row 4 is `1###..#.` -> 1,2,3,4 are # or 1, 5 is .).\nSo (5,4) is open.\nSo Move 1: F (North). I land at (5,4). Facing N.\nAt t=1, I am at (5,4).\nGuard P check: t=1. P pos: (4,2) [Cycle length 6: 0->(5,2), 1->(4,2)]. I am at (5,4). Safe.\nGuard Q check: t=1. Q pos: (7,1) [Cycle length 8: 0->(6,1), 1->(7,1)]. I am at (5,4). Safe.\nNow at (5,4). I need to get to (1,4).\nWest is blocked by wall at (3,5). Can I go West from (5,4)?\nTarget is (1,4). From (5,4) moving West goes to (4,4).\nRow 4 at Col 4 is # (Wall).\nSo if I try to move West from (5,4), I hit a wall. Bump.\nSo I cannot go West from (5,4).\nI must turn.\nCurrent facing N.\nIf I turn Left (W), I am still at (5,4), facing W.\nTick 2 consumed.\nAt t=2, I am at (5,4), facing W.\nGuard P: t=2. Pos (3,2). Safe.\nGuard Q: t=2. Pos (8,1). Safe.\nNow try to move West from (5,4) to (4,4).\nRow 4 Col 4 is #. Bump. Stay at (5,4).\nTick 3 consumed.\nAt t=3, I am at (5,4), facing W.\nGuard P: t=3. Pos (3,1). Safe.\nGuard Q: t=3. Pos (8,2). Safe.\nNow try to move West again from (5,4) to (4,4). Still blocked.\nThis path is dead.\nLet's try turning Right from (5,4).\nCurrent facing N. Turn Right -> Facing E.\nTick 2 consumed.\nAt t",
+          "label": "response"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2026-07-13T17:00:00.145222",
+        "action": {
+          "type": "invalid format",
+          "content": "missing or malformed POSITION line"
+        }
+      }
+    ]
+  ],
+  "Aborted": 1,
+  "Lose": 0,
+  "Success": 0,
+  "episode_result": {
+    "outcome": "aborted",
+    "delivered": 0,
+    "num_parcels": 2,
+    "used_ticks": 0,
+    "tick_budget": 48,
+    "optimal_ticks": 26,
+    "rounds_played": 0,
+    "bumps": 0,
+    "captures": 0,
+    "forfeited_ticks": 0,
+    "predictions_correct": 0,
+    "predictions_total": 0,
+    "reprompts": 2
+  },
+  "Request Count": [
+    2
+  ],
+  "Violated Request Count": [
+    2
+  ],
+  "Parsed Request Count": [
+    0
+  ]
+}
