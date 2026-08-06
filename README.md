@@ -66,22 +66,22 @@ For the full set of games and scripts used for evaluation, see [lm-playschool-20
 
 | Base Model | Team | Submission | playpen clemscore | playpen statscore | ID | OOD |
 |---|---|---|--:|--:|--:|--:|
-| **qwen3.5-2b** | | | **11.43** | **27.26** | **13.41** | **3.72** |
-| | CityUoL | Qwen-GuidePlay-2B-v1 | 50.44 ▲ | 36.74 ▲ | 46.26 ▲ | 10.25 ▲ |
-| | DAIR | sft-dpo-v2 | 49.03 ▲ | 26.87 ▼ | 50.75 ▲ | 14.56 ▲ |
-| | DAIR | sft-v1 | 46.34 ▲ | 22.86 ▼ | 46.57 ▲ | 15.62 ▲ |
-| | playornotplay | playornotplay-v1.0-merged-fp32-7263076 | 39.90 ▲ | 18.94 ▼ | 41.17 ▲ | 7.88 ▲ |
-| **qwen3.5-4b** | | | **33.71** | **37.16** | **34.02** | **17.99** |
-| | Bentel rockers | Bentel_iter | 36.09 ▲ | 35.75 ▼ | 37.41 ▲ | 16.60 ▼ |
-| | Bentel rockers | Bentel_iter_2 | 29.67 ▼ | 60.74 ▲ | 31.97 ▼ | 10.19 ▼ |
-| | Bentel rockers | Bentel_iter_3 | 36.09 ▲ | 35.75 ▼ | 37.76 ▲ | 16.60 ▼ |
-| **llama-3.1-8b-instruct** | | | **22.19** | **49.26** | **31.24** | **22.62** |
-| **qwen3.5-9b** | | | **33.28** | **54.53** | **41.12** | **24.91** |
+| **qwen3.5-2b** | | | **10.67** | **44.24** | **13.41** | **3.72** |
+| | CityUoL | Qwen-GuidePlay-2B-v1 | 46.66 ▲ | 42.30 ▼ | 46.26 ▲ | 10.25 ▲ |
+| | DAIR | sft-dpo-v2 | 49.60 ▲ | 43.53 ▼ | 50.75 ▲ | 14.56 ▲ |
+| | DAIR | sft-v1 | 46.01 ▲ | 44.35 ▲ | 46.57 ▲ | 15.62 ▲ |
+| | playornotplay | playornotplay-v1.0-merged-fp32-7263076 | 38.92 ▲ | 44.14 ▼ | 41.17 ▲ | 7.88 ▲ |
+| **qwen3.5-4b** | | | **26.66** | **51.33** | **34.02** | **17.99** |
+| | Bentel rockers | Bentel_iter | 31.58 ▲ | 54.27 ▲ | 37.41 ▲ | 16.60 ▼ |
+| | Bentel rockers | Bentel_iter_2 | 24.27 ▼ | 47.37 ▼ | 31.97 ▼ | 10.19 ▼ |
+| | Bentel rockers | Bentel_iter_3 | 33.35 ▲ | 54.27 ▲ | 37.76 ▲ | 16.60 ▼ |
+| **llama-3.1-8b-instruct** | | | **19.53** | **45.59** | **31.24** | **22.62** |
+| **qwen3.5-9b** | | | **31.91** | **53.90** | **41.12** | **24.91** |
 | | BSU-SLIM | qwen35-9b-prm-search-final | 36.61 ▲ | 49.92 ▼ | 39.64 ▼ | 15.18 ▼ |
-| | Dialogue Architects | SCoRe_Qwen3.5-9B | 37.60 ▲ | 52.61 ▼ | 43.12 ▲ | 23.37 ▼ |
-| | LLP: Large Language Problems | llp-final | 54.61 ▲ | 48.63 ▼ | 59.23 ▲ | 22.09 ▼ |
-| **qwen3.5-27b** | | | **62.34** | **70.18** | **64.34** | **43.51** |
-| | SLED-BSU | Success Filtered Supervised Finetuned Model PRM Guided (Beam search, best-of-N) | 46.90 ▼ | 63.8 ▼ | 56.36 ▼ | 30.02 ▼ |
+| | Dialogue Architects | SCoRe_Qwen3.5-9B | 34.39 ▲ | 53.26 ▼ | 43.12 ▲ | 23.37 ▼ |
+| | LLP: Large Language Problems | llp-final | 53.39 ▲ | 57.80 ▲ | 59.23 ▲ | 22.09 ▼ |
+| **qwen3.5-27b** | | | **60.30** | **65.05** | **64.34** | **43.51** |
+| | SLED-BSU | Success Filtered Supervised Finetuned Model PRM Guided (Beam search, best-of-N) | 46.90 ▼ | 63.80 ▼ | 56.36 ▼ | 30.02 ▼ |
 
 
 For full results, see [`summaries/`](summaries/):
