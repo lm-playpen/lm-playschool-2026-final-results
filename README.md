@@ -1,4 +1,4 @@
-# LM Playschool 2026 — closed games
+# LM Playschool 2026 — Evaluation Results
 
 This repository contains the LM Playschool Workshop (2026) final results.
 
